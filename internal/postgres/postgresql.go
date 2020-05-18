@@ -39,30 +39,6 @@ func NewStore() (GoodreadsStore, error) {
 	return s, nil
 }
 
-// ReadSqlx is a practice function to be replaced
-// func ReadSqlx() {
-// 	db, err := sqlx.Connect("pgx", "postgresql://localhost:5432/books?user=books&password=books")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-
-// 	bookid, _ := uuid.NewV4()
-
-// 	book := Book{
-// 		ID:     bookid,
-// 		Title:  "Example Book",
-// 		Author: "blah",
-// 		Rating: 5,
-// 		ISBN:   "22222",
-// 		ISBN13: "33333",
-// 		Status: "read",
-// 	}
-
-// 	err = db.Get(&book, "SELECT * FROM books LIMIT 1")
-
-// 	fmt.Println(book)
-// }
-
 // WriteRecord will store a Book object in the database
 func (s *store) WriteRecord(u User) error {
 	query := `INSERT INTO users (id, username, password) VALUES ($1, $2, $3)`
