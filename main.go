@@ -25,9 +25,6 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// hash := md5.Sum([]byte(u.password))
-	// u.password = hex.EncodeToString(hash[:])
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.MinCost)
 	if err != nil {
 		log.Println(err)
@@ -43,12 +40,30 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func login(w http.ResponseWriter, req *http.Request) {
-	q := req.URL.Query()
-	u := q.Get("username")
-	p := q.Get("password")
+func Login(w http.ResponseWriter, req *http.Request) {
+	var u postgresql.User
 
-	fmt.Fprintf(w, "hello %s, %s\n", u, p)
+	err := json.NewDecoder(req.Body).Decode(&u)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	DB, _ := postgresql.NewStore()
+
+	dbuser, err := DB.GetUser(u.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(dbuser.Password), []byte(u.Password))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Fprint(w, "Success")
 }
 
 func getData(w http.ResponseWriter, req *http.Request) {
@@ -58,7 +73,7 @@ func getData(w http.ResponseWriter, req *http.Request) {
 func main() {
 
 	http.HandleFunc("/create", CreateUser)
-	http.HandleFunc("/login", login)
+	http.HandleFunc("/login", Login)
 	http.HandleFunc("/getdata", getData)
 
 	http.ListenAndServe(":8090", nil)

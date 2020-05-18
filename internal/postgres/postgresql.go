@@ -1,6 +1,8 @@
 package postgresql
 
 import (
+	"errors"
+
 	"github.com/gofrs/uuid"
 
 	// Postgresql Driver
@@ -22,6 +24,7 @@ type store struct {
 // GoodreadsStore exposes prostgres functions for books db
 type GoodreadsStore interface {
 	WriteRecord(User) error
+	GetUser(string) (User, error)
 }
 
 // NewStore returns an instance of the GoodreadsStore
@@ -70,4 +73,19 @@ func (s *store) WriteRecord(u User) error {
 	}
 
 	return nil
+}
+
+func (s *store) GetUser(un string) (User, error) {
+	users := []User{}
+
+	err := s.DB.Select(&users, `SELECT * FROM users WHERE username = $1`, un)
+	if err != nil {
+		return User{}, err
+	}
+
+	if len(users) == 0 {
+		return User{}, errors.New("no records found")
+	}
+
+	return users[0], nil
 }
